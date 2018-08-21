@@ -3,10 +3,10 @@
     <el-form ref="form" status-icon :rules="rules" :model="form" label-width="80px">
       <img src="../assets/avatar.jpg" alt="">
       <el-form-item label="用户名" prop="username">
-        <el-input v-model="form.username" placeholder="请输入用户名"></el-input>
+        <el-input v-model="form.username" placeholder="请输入用户名" ref="input" @keyup.enter.native="login"></el-input>
       </el-form-item>
       <el-form-item label="密码" prop="password">
-        <el-input type="password" v-model="form.password" placeholder="请输入密码"></el-input>
+        <el-input type="password" v-model="form.password" placeholder="请输入密码" @keyup.enter.native="login" ></el-input>
       </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="login">登录</el-button>
@@ -40,28 +40,32 @@ export default {
   methods: {
     login () {
       // 表单校验 获取数据
-      this.$refs.form.validate((info) => {
+      this.$refs.form.validate(async (info) => {
         if (info) {
-          this.axios({
+          let res = await this.axios({
             method: 'post',
-            url: 'http://localhost:8888/api/private/v1/login',
+            url: 'login',
             data: this.form
-          }).then(info => {
-            if (info.data.meta.status === 200) {
-              this.$message.success('登陆成功')
-              // 设置localstorage
-              localStorage.setItem('shoptoken', info.data.data.token)
-              this.$router.push('home')
-            } else {
-              this.$message.error('用户名或密码错误')
-            }
           })
+          if (res.data.meta.status === 200) {
+            this.$message.success('登陆成功')
+            // 设置localstorage
+            localStorage.setItem('shoptoken', res.data.data.token)
+            this.$router.push('home')
+          } else {
+            this.$message.error(res.data.meta.msg)
+          }
+        } else {
+          return false
         }
       })
     },
     reset () {
       this.$refs.form.resetFields()
     }
+  },
+  created () {
+    this.$nextTick(() => { this.$refs['input'].focus() })
   }
 }
 </script>
